@@ -7,6 +7,8 @@ mpfr_prec_t mpw_ns::mpw_defs::mpw_b_prec = mpfr_prec_t(ceil((mpw_ns::mpw_defs::m
 mpfr_rnd_t mpw_ns::mpw_defs::mpfr_rnd_type = MPFR_RNDN;
 mpc_rnd_t mpw_ns::mpw_defs::mpcw_rnd_type = MPC_RNDNN;
 size_t mpw_ns::mpw_defs::str_length = 15;
+size_t mpw_ns::mpw_defs::mpw_d_prec_buffer = 10;
+size_t mpw_ns::mpw_defs::mpw_max_iters = 100;
 
 void mpw_ns::mpw_defs::set_d_prec(const size_t new_prec)
 {

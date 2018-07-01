@@ -25,9 +25,21 @@ mpw_ns::mpcw::mpcw(const int re_in)
 	mpc_set_si(this->mpc_l, re_in, mpw_ns::mpw_defs::mpcw_rnd_type);
 }
 
+mpw_ns::mpcw::mpcw(const int re_in, const size_t new_d_prec)
+{
+	mpc_init2(this->mpc_l, mpfr_prec_t(ceil((new_d_prec+1) * 3.322) + 5));
+	mpc_set_si(this->mpc_l, re_in, mpw_ns::mpw_defs::mpcw_rnd_type);
+}
+
 mpw_ns::mpcw::mpcw(const int re_in, const int im_in)
 {
 	mpc_init2(this->mpc_l, mpw_ns::mpw_defs::mpw_b_prec);
+	mpc_set_si_si(this->mpc_l, re_in, im_in, mpw_ns::mpw_defs::mpcw_rnd_type);
+}
+
+mpw_ns::mpcw::mpcw(const int re_in, const int im_in, const size_t new_d_prec)
+{
+	mpc_init2(this->mpc_l, mpfr_prec_t(ceil((new_d_prec+1) * 3.322) + 5));
 	mpc_set_si_si(this->mpc_l, re_in, im_in, mpw_ns::mpw_defs::mpcw_rnd_type);
 }
 
@@ -52,6 +64,12 @@ mpw_ns::mpcw::mpcw(const mpfr_t re_in, const mpfr_t im_in)
 mpw_ns::mpcw::mpcw(const mpcw &in)
 {
 	mpc_init2(this->mpc_l, mpw_ns::mpw_defs::mpw_b_prec);
+	mpc_set(this->mpc_l, in.mpc_l, mpw_ns::mpw_defs::mpcw_rnd_type);
+}
+
+mpw_ns::mpcw::mpcw(const mpcw &in, const size_t new_d_prec)
+{
+	mpc_init2(this->mpc_l, mpfr_prec_t(ceil((new_d_prec+1) * 3.322) + 5));
 	mpc_set(this->mpc_l, in.mpc_l, mpw_ns::mpw_defs::mpcw_rnd_type);
 }
 
@@ -130,9 +148,7 @@ void mpw_ns::mpcw::operator=(const mpw_ns::mpcw& other)
 
 mpw_ns::mpcw mpw_ns::mpcw::operator+(const int other) const
 {
-	mpw_ns::mpcw res = mpw_ns::mpcw();
-	mpc_add_si(res.mpc_l, this->mpc_l, other, mpw_ns::mpw_defs::mpcw_rnd_type);
-	return res;
+	return *this + mpw_ns::mpcw(other);
 }
 
 mpw_ns::mpcw mpw_ns::mpcw::operator+(const double other) const
@@ -155,8 +171,7 @@ mpw_ns::mpcw& mpw_ns::mpcw::operator+=(const mpcw& other)
 
 mpw_ns::mpcw& mpw_ns::mpcw::operator+=(const int other)
 {
-	mpc_add_si(this->mpc_l, this->mpc_l, other, mpw_ns::mpw_defs::mpcw_rnd_type);
-	return *this;
+	return *this += mpw_ns::mpcw(other);
 }
 
 mpw_ns::mpcw& mpw_ns::mpcw::operator+=(const double other)
@@ -206,9 +221,7 @@ mpw_ns::mpcw mpw_ns::mpcw::operator-() const
 
 mpw_ns::mpcw mpw_ns::mpcw::operator*(const int other) const
 {
-	mpw_ns::mpcw res = mpw_ns::mpcw();
-	mpc_mul_si(res.mpc_l, this->mpc_l, other, mpw_ns::mpw_defs::mpcw_rnd_type);
-	return res;
+	return *this * mpw_ns::mpcw(other);
 }
 
 mpw_ns::mpcw mpw_ns::mpcw::operator*(const double other) const
@@ -225,8 +238,7 @@ mpw_ns::mpcw mpw_ns::mpcw::operator*(const mpcw& other) const
 
 mpw_ns::mpcw& mpw_ns::mpcw::operator*=(const int other)
 {
-	mpc_mul_si(this->mpc_l, this->mpc_l, other, mpw_ns::mpw_defs::mpcw_rnd_type);
-	return *this;
+	return *this *= mpw_ns::mpcw(other);
 }
 
 mpw_ns::mpcw& mpw_ns::mpcw::operator*=(const double other)
@@ -242,9 +254,7 @@ mpw_ns::mpcw& mpw_ns::mpcw::operator*=(const mpcw& other)
 
 mpw_ns::mpcw mpw_ns::mpcw::operator/(const int other) const
 {
-	mpw_ns::mpcw res = mpw_ns::mpcw();
-	mpc_div_2si(res.mpc_l, this->mpc_l, other, mpw_ns::mpw_defs::mpcw_rnd_type);
-	return res;
+	return *this / mpw_ns::mpcw(other);
 }
 
 mpw_ns::mpcw mpw_ns::mpcw::operator/(const double other) const
@@ -261,14 +271,14 @@ mpw_ns::mpcw mpw_ns::mpcw::operator/(const mpcw& other) const
 
 mpw_ns::mpcw& mpw_ns::mpcw::operator/=(const int other)
 {
-	mpc_div_2si(this->mpc_l, this->mpc_l, other, mpw_ns::mpw_defs::mpcw_rnd_type);
-	return *this;
+	return *this /= mpw_ns::mpcw(other);
 }
 
 mpw_ns::mpcw& mpw_ns::mpcw::operator/=(const double other)
 {
 	return *this /= mpw_ns::mpcw(other);
 }
+
 mpw_ns::mpcw& mpw_ns::mpcw::operator/=(const mpcw& other)
 {
 	mpc_div(this->mpc_l, this->mpc_l, other.mpc_l, mpw_ns::mpw_defs::mpcw_rnd_type);
@@ -294,18 +304,16 @@ bool mpw_ns::mpcw::operator>(const mpcw& other) const
 {
 	if(mpw_ns::imag(*this) != 0 || mpw_ns::imag(other) != 0)
 	{
-		std::cout << "Can't compare non-real numbers!" << std::endl;
-		throw -1;
+		throw std::invalid_argument("Can't compare non-real numbers!");
 	}
-	return mpc_cmp(this->mpc_l, other.mpc_l) > 0;
+	return MPC_INEX_RE(mpc_cmp(this->mpc_l, other.mpc_l)) > 0;
 }
 
 bool mpw_ns::mpcw::operator>(const double other) const
 {
 	if(mpw_ns::imag(*this) != 0)
 	{
-		std::cout << "Can't compare non-real numbers!" << std::endl;
-		throw -1;
+		throw std::invalid_argument("Can't compare non-real numbers!");
 	}
 	return *this > mpw_ns::mpcw(other);
 }
@@ -314,100 +322,90 @@ bool mpw_ns::mpcw::operator>(const int other) const
 {
 	if(mpw_ns::imag(*this) != 0)
 	{
-		std::cout << "Can't compare non-real numbers!" << std::endl;
-		throw -1;
+		throw std::invalid_argument("Can't compare non-real numbers!");
 	}
-	return mpc_cmp_si_si(this->mpc_l, other, 0) > 0;
+	return *this > mpw_ns::mpcw(other);
 }
 
 bool mpw_ns::mpcw::operator>=(const mpcw& other) const
 {
 	if(mpw_ns::imag(*this) != 0 || mpw_ns::imag(other) != 0)
 	{
-		std::cout << "Can't compare non-real numbers!" << std::endl;
-		throw -1;
+		throw std::invalid_argument("Can't compare non-real numbers!");
 	}
-	return mpc_cmp(this->mpc_l, other.mpc_l) >= 0;
+	return MPC_INEX_RE(mpc_cmp(this->mpc_l, other.mpc_l)) >= 0;
 }
 
 bool mpw_ns::mpcw::operator>=(const double other) const
 {
 	if(mpw_ns::imag(*this) != 0 || mpw_ns::imag(other) != 0)
 	{
-		std::cout << "Can't compare non-real numbers!" << std::endl;
-		throw -1;
+		throw std::invalid_argument("Can't compare non-real numbers!");
 	}
-	return mpc_cmp(this->mpc_l, mpcw(other).mpc_l) >= 0;
+	return *this >= mpw_ns::mpcw(other);
 }
 
 bool mpw_ns::mpcw::operator>=(const int other) const
 {
 	if(mpw_ns::imag(*this) != 0 || mpw_ns::imag(other) != 0)
 	{
-		std::cout << "Can't compare non-real numbers!" << std::endl;
-		throw -1;
+		throw std::invalid_argument("Can't compare non-real numbers!");
 	}
-	return mpc_cmp_si(this->mpc_l, other) >= 0;
+	return *this >= mpw_ns::mpcw(other);
 }
 
 bool mpw_ns::mpcw::operator<(const mpcw& other) const
 {
 	if(mpw_ns::imag(*this) != 0 || mpw_ns::imag(other) != 0)
 	{
-		std::cout << "Can't compare non-real numbers!" << std::endl;
-		throw -1;
+		throw std::invalid_argument("Can't compare non-real numbers!");
 	}
-	return mpc_cmp(this->mpc_l, other.mpc_l) < 0;
+	return MPC_INEX_RE(mpc_cmp(this->mpc_l, other.mpc_l)) < 0;
 }
 
 bool mpw_ns::mpcw::operator<(const double other) const
 {
 	if(mpw_ns::imag(*this) != 0 || mpw_ns::imag(other) != 0)
 	{
-		std::cout << "Can't compare non-real numbers!" << std::endl;
-		throw -1;
+		throw std::invalid_argument("Can't compare non-real numbers!");
 	}
-	return mpc_cmp(this->mpc_l, mpcw(other).mpc_l) < 0;
+	return *this < mpw_ns::mpcw(other);
 }
 
 bool mpw_ns::mpcw::operator<(const int other) const
 {
 	if(mpw_ns::imag(*this) != 0 || mpw_ns::imag(other) != 0)
 	{
-		std::cout << "Can't compare non-real numbers!" << std::endl;
-		throw -1;
+		throw std::invalid_argument("Can't compare non-real numbers!");
 	}
-	return mpc_cmp_si(this->mpc_l, other) < 0;
+	return *this < mpw_ns::mpcw(other);
 }
 
 bool mpw_ns::mpcw::operator<=(const mpcw& other) const
 {
 	if(mpw_ns::imag(*this) != 0 || mpw_ns::imag(other) != 0)
 	{
-		std::cout << "Can't compare non-real numbers!" << std::endl;
-		throw -1;
+		throw std::invalid_argument("Can't compare non-real numbers!");
 	}
-	return mpc_cmp(this->mpc_l, other.mpc_l) <= 0;
+	return MPC_INEX_RE(mpc_cmp(this->mpc_l, other.mpc_l)) <= 0;
 }
 
 bool mpw_ns::mpcw::operator<=(const double other) const
 {
 	if(mpw_ns::imag(*this) != 0 || mpw_ns::imag(other) != 0)
 	{
-		std::cout << "Can't compare non-real numbers!" << std::endl;
-		throw -1;
+		throw std::invalid_argument("Can't compare non-real numbers!");
 	}
-	return mpc_cmp(this->mpc_l, mpcw(other).mpc_l) <= 0;
+	return *this <= mpw_ns::mpcw(other);
 }
 
 bool mpw_ns::mpcw::operator<=(const int other) const
 {
 	if(mpw_ns::imag(*this) != 0 || mpw_ns::imag(other) != 0)
 	{
-		std::cout << "Can't compare non-real numbers!" << std::endl;
-		throw -1;
+		throw std::invalid_argument("Can't compare non-real numbers!");
 	}
-	return mpc_cmp_si(this->mpc_l, other) < 0;
+	return *this <= mpw_ns::mpcw(other);
 }
 
 bool mpw_ns::mpcw::operator!=(const mpcw& other) const
@@ -459,6 +457,15 @@ mpw_ns::mpcw mpw_ns::mpcw::conj() const
 {
 	mpw_ns::mpcw res = mpw_ns::mpcw();
 	mpc_conj(res.mpc_l, this->mpc_l, mpw_ns::mpw_defs::mpcw_rnd_type);
+	return res;
+}
+
+mpw_ns::mpcw mpw_ns::mpcw::angle() const
+{
+	mpfr_t aux;
+	mpfr_init2(aux, mpw_ns::mpw_defs::mpw_b_prec);
+	mpc_arg(aux, this->mpc_l, mpw_ns::mpw_defs::mpfr_rnd_type);
+	mpw_ns::mpcw res = mpw_ns::mpcw(aux);
 	return res;
 }
 
