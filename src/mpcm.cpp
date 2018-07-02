@@ -12,15 +12,15 @@ size_t mpw_ns::mpcm::_max_index() const
 	return this->n_rows * this->n_cols;
 }
 
-void mpw_ns::mpcm::_initialize_pivot(uint& r_p, uint& c_p, mpw_ns::mpcm& max_vals, uint* max_indexes, const size_t new_d_prec)
+void mpw_ns::mpcm::_initialize_pivot(uint& r_p, uint& c_p, mpw_ns::mpcm& max_vals, uint* max_indexes)
 {
-	max_vals.data[0] = mpw_ns::mpcw(0, new_d_prec); // the zero element is unused, so it's utilized to hold the total maximum
+	max_vals.data[0] = mpw_ns::mpcw(0); // the zero element is unused, so it's utilized to hold the total maximum
 	max_indexes[0] = 0;
 	r_p = 0;
 	c_p = 0;
 	for (uint r = 1; r < this->n_rows; r++)
 	{
-		max_vals.data[r] = mpw_ns::mpcw(0, new_d_prec);
+		max_vals.data[r] = mpw_ns::mpcw(0);
 		for (uint c = 0; c < r; c++)
 		{
 //			std::cout << mpw_ns::str(mpw_ns::abs(this->data[this->_index(r,c)])) << std::endl;
@@ -41,18 +41,15 @@ void mpw_ns::mpcm::_initialize_pivot(uint& r_p, uint& c_p, mpw_ns::mpcm& max_val
 	}
 }
 
-void mpw_ns::mpcm::_update_pivot(uint& r_p, uint& c_p, mpw_ns::mpcm& max_vals, uint* max_indexes, const size_t new_d_prec)
+void mpw_ns::mpcm::_update_pivot(uint& r_p, uint& c_p, mpw_ns::mpcm& max_vals, uint* max_indexes)
 {
-	max_vals.data[0] = mpw_ns::mpcw(0, new_d_prec); // the zero element is unused, so it's utilized to hold the total maximum
+	max_vals.data[0] = mpw_ns::mpcw(0); // the zero element is unused, so it's utilized to hold the total maximum
 	max_indexes[0] = 0;
 	uint new_r_p = r_p;
 	uint new_c_p = c_p;
-	max_vals.data[c_p] = mpw_ns::mpcw(0, new_d_prec);
+	max_vals.data[c_p] = mpw_ns::mpcw(0);
 	for (uint q = 0; q < c_p; q++)
 	{
-//		std::cout << mpw_ns::str(mpw_ns::abs(this->data[this->_index(c_p,q)])) << std::endl;
-//		std::cout << mpw_ns::str(max_vals.data[c_p]) << std::endl;
-//		bool qqq = mpw_ns::abs(this->data[this->_index(c_p,q)]) > max_vals.data[c_p];
 		if (mpw_ns::abs(this->data[this->_index(c_p,q)]) > max_vals.data[c_p])
 		{
 			max_vals.data[c_p] = mpw_ns::abs(this->data[this->_index(c_p,q)]);
@@ -65,7 +62,7 @@ void mpw_ns::mpcm::_update_pivot(uint& r_p, uint& c_p, mpw_ns::mpcm& max_vals, u
 			new_c_p = q;
 		}
 	}
-	max_vals.data[r_p] = mpw_ns::mpcw(0, new_d_prec);
+	max_vals.data[r_p] = mpw_ns::mpcw(0);
 	for (uint q = 0; q < r_p; q++)
 	{
 		if (mpw_ns::abs(this->data[this->_index(r_p,q)]) > max_vals.data[r_p])
@@ -367,6 +364,11 @@ mpw_ns::mpcm mpw_ns::mpcm::inv() const
 
 std::tuple<mpw_ns::mpcm, mpw_ns::mpcm> mpw_ns::mpcm::Householder_double_sided() const
 {
+	return mpw_ns::mpcm::Householder_double_sided(mpw_ns::mpw_defs::d_prec_buffer());
+}
+
+std::tuple<mpw_ns::mpcm, mpw_ns::mpcm> mpw_ns::mpcm::Householder_double_sided(const size_t prec_buffer) const
+{
 	if (!this->is_Square())
 	{
 		throw std::invalid_argument("Matrix must be square!");
@@ -375,13 +377,14 @@ std::tuple<mpw_ns::mpcm, mpw_ns::mpcm> mpw_ns::mpcm::Householder_double_sided() 
 	{
 		throw std::invalid_argument("Matrix must have more than 2 rows / columns!");
 	}
+	mpw_ns::mpcm res = mpw_ns::mpcm(*this, mpw_ns::mpw_defs::d_prec() + prec_buffer);
+	mpw_ns::mpw_defs::set_d_prec(mpw_ns::mpw_defs::d_prec() + prec_buffer);
 	mpw_ns::mpcw i = mpw_ns::mpcw(0,1);
-	mpw_ns::mpcm res = *this;
 	mpw_ns::mpcm P = mpw_ns::I(this->n_rows, this->n_cols);
 	for (uint c = 0; c < res.n_cols - 2; c++)
 	{
 			mpw_ns::mpcm loc_col = res.get_column(c);
-			mpw_ns::mpcm tar_col = mpw_ns::zeros(res.n_rows,1);
+			mpw_ns::mpcm tar_col = mpw_ns::zeros(res.n_rows, 1);
 			for (uint _i = 0; _i <= c; _i++)
 			{
 				tar_col.data[_i] = loc_col.data[_i];
@@ -396,10 +399,16 @@ std::tuple<mpw_ns::mpcm, mpw_ns::mpcm> mpw_ns::mpcm::Householder_double_sided() 
 			res = res - 2*u*(u.H()*res) - 2*(res*u)*u.H() + 4*(u*((u.H()*(res*u))*u.H()));
 			P = P - 2*u*(u.H()*P);
 	}
+	mpw_ns::mpw_defs::set_d_prec(mpw_ns::mpw_defs::d_prec() - prec_buffer);
 	return std::make_tuple(res, P.H());
 }
 
 std::tuple<mpw_ns::mpcm, mpw_ns::mpcm> mpw_ns::mpcm::Householder_single_sided() const
+{
+	throw std::invalid_argument("Not realized yet!");
+}
+
+std::tuple<mpw_ns::mpcm, mpw_ns::mpcm> mpw_ns::mpcm::Householder_single_sided(const size_t prec_buffer) const
 {
 	throw std::invalid_argument("Not realized yet!");
 }
@@ -493,8 +502,14 @@ void mpw_ns::mpcm::Jacobi_rotator(mpw_ns::mpcm& J, const size_t r_p, const size_
 
 }
 
+std::tuple<mpw_ns::mpcm, mpw_ns::mpcm> mpw_ns::mpcm::Hermitian_eig() const
+{
+	return mpw_ns::mpcm::Hermitian_eig(mpw_ns::mpw_defs::max_iters(), mpw_ns::mpcw(10)^mpw_ns::mpw_defs::tol_exp(),
+									   mpw_ns::mpw_defs::d_prec_buffer(), mpw_ns::mpw_defs::use_Householder_prec());
+}
+
 std::tuple<mpw_ns::mpcm, mpw_ns::mpcm> mpw_ns::mpcm::Hermitian_eig(const size_t max_iter, const mpw_ns::mpcw& tol,
-																   const size_t prec_buffer) const
+																   const size_t prec_buffer, const bool use_Householder_prep) const
 {
 	if (!this->is_Square())
 	{
@@ -504,14 +519,26 @@ std::tuple<mpw_ns::mpcm, mpw_ns::mpcm> mpw_ns::mpcm::Hermitian_eig(const size_t 
 	{
 		throw std::invalid_argument("The matrix must be Hermitian!");
 	}
-	mpw_ns::mpcm M_loc = mpw_ns::mpcm(*this, mpw_ns::mpw_defs::d_prec() + prec_buffer);
-	mpw_ns::mpcm J = mpw_ns::I(this->n_rows, this->n_cols, mpw_ns::mpw_defs::d_prec() + prec_buffer);
+	mpw_ns::mpw_defs::set_d_prec(mpw_ns::mpw_defs::d_prec() + prec_buffer);
+	mpw_ns::mpcm M_loc = mpw_ns::mpcm();
+	mpw_ns::mpcm J = mpw_ns::mpcm();
+	if (use_Householder_prep)
+	{
+		std::tuple<mpw_ns::mpcm, mpw_ns::mpcm> aux = this->Householder_double_sided(prec_buffer);
+		M_loc = (std::get<0>(aux) + std::get<0>(aux).H()) / 2;
+		J = std::get<1>(aux).H();
+	}
+	else
+	{
+		M_loc = mpw_ns::mpcm(*this, mpw_ns::mpw_defs::d_prec() + prec_buffer);
+		J = mpw_ns::I(this->n_rows, this->n_cols);
+	}
 	uint current_iter = 0;
 	uint r_p = 0;
 	uint c_p = 0;
 	mpw_ns::mpcm max_vals = mpw_ns::zeros(this->n_rows, 1);
 	uint* max_indexes = new uint[this->n_rows];
-	M_loc._initialize_pivot(r_p, c_p, max_vals, max_indexes, mpw_ns::mpw_defs::d_prec() + prec_buffer);
+	M_loc._initialize_pivot(r_p, c_p, max_vals, max_indexes);
 	bool break_flag = false;
 	while (current_iter < max_iter && !break_flag)
 	{
@@ -534,13 +561,14 @@ std::tuple<mpw_ns::mpcm, mpw_ns::mpcm> mpw_ns::mpcm::Hermitian_eig(const size_t 
 		}
 		M_loc.Jacobi_complex_rotator(J, r_p, c_p);
 		M_loc.Jacobi_real_rotator(J, r_p, c_p);
-		M_loc._update_pivot(r_p, c_p, max_vals, max_indexes, mpw_ns::mpw_defs::d_prec() + prec_buffer);
+		M_loc._update_pivot(r_p, c_p, max_vals, max_indexes);
 	}
 	delete[] max_indexes;
 	if (!break_flag)
 	{
 		throw std::runtime_error("Jacobi Hermitian eigenvalues algorithm failed to converge to the desired precision!");
 	}
+	mpw_ns::mpw_defs::set_d_prec(mpw_ns::mpw_defs::d_prec() - prec_buffer);
 	return std::make_tuple(M_loc, J.H());
 }
 

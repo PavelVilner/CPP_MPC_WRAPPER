@@ -285,6 +285,23 @@ mpw_ns::mpcw& mpw_ns::mpcw::operator/=(const mpcw& other)
 	return *this;
 }
 
+mpw_ns::mpcw mpw_ns::mpcw::operator^(const mpcw& other) const
+{
+	mpw_ns::mpcw res = mpw_ns::mpcw();
+	mpc_pow(res.mpc_l, this->mpc_l, other.mpc_l, mpw_ns::mpw_defs::mpcw_rnd_type);
+	return res;
+}
+
+mpw_ns::mpcw mpw_ns::mpcw::operator^(const double other) const
+{
+	return *this ^ mpw_ns::mpcw(other);
+}
+
+mpw_ns::mpcw mpw_ns::mpcw::operator^(const int other) const
+{
+	return *this ^ mpw_ns::mpcw(other);
+}
+
 bool mpw_ns::mpcw::operator==(const int other) const
 {
 	return *this == mpw_ns::mpcw(other);

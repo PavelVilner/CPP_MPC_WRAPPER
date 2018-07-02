@@ -27,6 +27,8 @@ namespace mpw_ns
 			static size_t str_length;
 			static size_t mpw_max_iters;
 			static size_t mpw_d_prec_buffer;
+			static int mpw_tol_exp;
+			static bool mpw_use_Householder_prec;
 			mpw_defs() {};
 
 		public:
@@ -35,12 +37,16 @@ namespace mpw_ns
 			static void set_mpcw_str_length(const size_t length);
 			static void set_max_iters(const size_t new_iters);
 			static void set_d_prec_buffer(const size_t new_buffer);
+			static void set_tol_exp(const int new_tol);
+			static void set_use_Householder_prec(const bool new_prec);
 			static mpfr_prec_t b_prec();
 			static size_t d_prec();
 			static size_t max_iters();
 			static size_t d_prec_buffer();
 			static mpfr_rnd_t rnd_type();
 			static size_t mpcw_str_length();
+			static int tol_exp();
+			static bool use_Householder_prec();
 			static std::string mpfr_to_str(const mpfr_t val, const size_t length);
 	};
 
@@ -96,6 +102,9 @@ namespace mpw_ns
 			mpcw& operator/=(const mpcw& other);
 			mpcw& operator/=(const double other);
 			mpcw& operator/=(const int other);
+			mpcw operator^(const mpcw& other) const;
+			mpcw operator^(const double other) const;
+			mpcw operator^(const int other) const;
 			bool operator==(const mpcw& other) const;
 			bool operator==(const double other) const;
 			bool operator==(const int other) const;
@@ -149,8 +158,8 @@ namespace mpw_ns
 			size_t n_cols;
 			size_t _index(const size_t r, const size_t c) const;
 			size_t _max_index() const;
-			void _initialize_pivot(uint& r_p, uint& c_p, mpcm& max_vals, uint* max_indexes, const size_t new_d_prec);
-			void _update_pivot(uint& r_p, uint& c_p, mpcm& max_vals, uint* max_indexes, const size_t new_d_prec);
+			void _initialize_pivot(uint& r_p, uint& c_p, mpcm& max_vals, uint* max_indexes);
+			void _update_pivot(uint& r_p, uint& c_p, mpcm& max_vals, uint* max_indexes);
 
 		public:
 			mpcm();
@@ -176,11 +185,14 @@ namespace mpw_ns
 			mpcm inv() const;
 			mpcw max_diff(const mpcm& other) const;
 			std::tuple<mpcm, mpcm> Householder_double_sided() const;
+			std::tuple<mpcm, mpcm> Householder_double_sided(const size_t prec_buffer) const;
 			std::tuple<mpcm, mpcm> Householder_single_sided() const;
+			std::tuple<mpcm, mpcm> Householder_single_sided(const size_t prec_buffer) const;
 			void Jacobi_complex_rotator(mpcm& J, const size_t r_p, const size_t c_p);
 			void Jacobi_real_rotator(mpcm& J, const size_t r_p, const size_t c_p);
 			void Jacobi_rotator(mpcm& J, const size_t r_p, const size_t c_p, const mpcw& x1, const mpcw& x2, const mpcw& x3, const mpcw& x4);
-			std::tuple<mpcm, mpcm> Hermitian_eig(const size_t max_iter, const mpcw& tol, const size_t prec_buffer) const;
+			std::tuple<mpcm, mpcm> Hermitian_eig() const;
+			std::tuple<mpcm, mpcm> Hermitian_eig(const size_t max_iter, const mpcw& tol, const size_t prec_buffer, const bool use_Householder_prec) const;
 			std::tuple<mpcm, mpcm> Takagi_fact(const mpcm& M, const size_t max_iter, const size_t prec_buffer) const;
 			std::tuple<mpcm, mpcm, mpcm> SVD(const mpcm& M, const size_t max_iter, const size_t prec_buffer) const;
 			std::tuple<mpcm, mpcm> QR(const mpcm& M, const size_t max_iter, const size_t prec_buffer) const;

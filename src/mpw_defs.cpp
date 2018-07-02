@@ -8,7 +8,9 @@ mpfr_rnd_t mpw_ns::mpw_defs::mpfr_rnd_type = MPFR_RNDN;
 mpc_rnd_t mpw_ns::mpw_defs::mpcw_rnd_type = MPC_RNDNN;
 size_t mpw_ns::mpw_defs::str_length = 15;
 size_t mpw_ns::mpw_defs::mpw_d_prec_buffer = 10;
-size_t mpw_ns::mpw_defs::mpw_max_iters = 100;
+size_t mpw_ns::mpw_defs::mpw_max_iters = 10000;
+int mpw_ns::mpw_defs::mpw_tol_exp = -20;
+bool mpw_ns::mpw_defs::mpw_use_Householder_prec = true;
 
 void mpw_ns::mpw_defs::set_d_prec(const size_t new_prec)
 {
@@ -41,6 +43,17 @@ void mpw_ns::mpw_defs::set_mpcw_str_length(const size_t length)
 {
 	mpw_ns::mpw_defs::str_length = length;
 }
+
+void mpw_ns::mpw_defs::set_tol_exp(const int new_tol)
+{
+	mpw_ns::mpw_defs::mpw_tol_exp = new_tol;
+}
+
+void mpw_ns::mpw_defs::set_use_Householder_prec(const bool new_prec)
+{
+	mpw_ns::mpw_defs::mpw_use_Householder_prec = new_prec;
+}
+
 mpfr_prec_t mpw_ns::mpw_defs::b_prec()
 {
 	return mpw_ns::mpw_defs::mpw_b_prec;
@@ -51,6 +64,11 @@ size_t mpw_ns::mpw_defs::d_prec()
 	return mpw_ns::mpw_defs::mpw_d_prec;
 }
 
+size_t mpw_ns::mpw_defs::d_prec_buffer()
+{
+	return mpw_ns::mpw_defs::mpw_d_prec_buffer;
+}
+
 mpfr_rnd_t mpw_ns::mpw_defs::rnd_type()
 {
 	return mpw_ns::mpw_defs::mpfr_rnd_type;
@@ -59,6 +77,21 @@ mpfr_rnd_t mpw_ns::mpw_defs::rnd_type()
 size_t mpw_ns::mpw_defs::mpcw_str_length()
 {
 	return mpw_ns::mpw_defs::str_length;
+}
+
+size_t mpw_ns::mpw_defs::max_iters()
+{
+	return mpw_ns::mpw_defs::mpw_max_iters;
+}
+
+int mpw_ns::mpw_defs::tol_exp()
+{
+	return mpw_ns::mpw_defs::mpw_tol_exp;
+}
+
+bool mpw_ns::mpw_defs::use_Householder_prec()
+{
+	return mpw_ns::mpw_defs::mpw_use_Householder_prec;
 }
 
 std::string mpw_ns::mpw_defs::mpfr_to_str(const mpfr_t val, const size_t length)
